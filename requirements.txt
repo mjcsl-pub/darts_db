@@ -1,0 +1,4 @@
+# Dashboard (the backup tool itself needs only the standard library)
+streamlit>=1.48
+pandas>=2.2
+plotly>=5.20

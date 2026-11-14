@@ -8,6 +8,7 @@ Usage:
     python sync_darts.py --watch    # keep running, export each time the tablet is plugged in
 """
 import argparse
+import os
 import shutil
 import sqlite3
 import subprocess
@@ -81,11 +82,33 @@ def export_once(adb: str) -> Path:
         out_dir.mkdir(parents=True, exist_ok=True)
         for name in DB_NAMES:
             merge_wal(db_dir, name, out_dir / f"{name}.db")
-    latest = EXPORTS / "latest"
-    shutil.rmtree(latest, ignore_errors=True)
-    shutil.copytree(out_dir, latest)
     print(f">> Saved {out_dir}")
+    update_latest(out_dir)
     return out_dir
+
+
+def update_latest(out_dir: Path) -> None:
+    """Copy the new export into exports/latest, one file at a time.
+
+    A file that is open in another program (e.g. a SQLite viewer) can't be
+    replaced on Windows; report that instead of silently leaving old data.
+    """
+    latest = EXPORTS / "latest"
+    latest.mkdir(parents=True, exist_ok=True)
+    locked = []
+    for src in out_dir.iterdir():
+        tmp = latest / (src.name + ".new")
+        shutil.copy2(src, tmp)
+        try:
+            os.replace(tmp, latest / src.name)
+        except PermissionError:
+            tmp.unlink(missing_ok=True)
+            locked.append(src.name)
+    if locked:
+        print(f"!! exports/latest NOT fully updated: {', '.join(locked)} is open in another "
+              f"program. Close it and run again, or use {out_dir}")
+    else:
+        print(f">> Updated {latest}")
 
 
 def wait_for_device(adb: str) -> None:

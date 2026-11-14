@@ -1,0 +1,6 @@
+[server]
+# Skip the first-run email prompt in the console
+showEmailPrompt = false
+
+[browser]
+gatherUsageStats = false
