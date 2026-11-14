@@ -1,0 +1,16 @@
+# Personal data exported from the tablet
+exports/
+backups/
+
+# Build output
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Local logs
+*.log
